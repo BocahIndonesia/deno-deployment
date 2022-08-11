@@ -1,40 +1,15 @@
-import { serve } from "https://deno.land/std@0.140.0/http/server.ts";
+import { Application } from "https://deno.land/x/oak@v10.6.0/mod.ts";
+import todoRouter from './routes/todo.ts'
 
-async function handleRequest(request: Request): Promise<Response> {
-  const { pathname } = new URL(request.url);
+const app= new Application();
+const port= 3030;
 
-  // This is how the server works:
-  // 1. A request comes in for a specific asset.
-  // 2. We read the asset from the file system.
-  // 3. We send the asset back to the client.
+app.use(todoRouter.routes())
+app.use(todoRouter.allowedMethods())
 
-  // Check if the request is for style.css.
-  if (pathname.startsWith("/style.css")) {
-    // Read the style.css file from the file system.
-    const file = await Deno.readFile("./style.css");
-    // Respond to the request with the style.css file.
-    return new Response(file, {
-      headers: {
-        "content-type": "text/css",
-      },
-    });
-  }
-
-  return new Response(
-    `<html>
-      <head>
-        <link rel="stylesheet" href="style.css" />
-      </head>
-      <body>
-        <h1>Example</h1>
-      </body>
-    </html>`,
-    {
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-      },
-    },
-  );
-}
-
-serve(handleRequest);
+app.addEventListener("listen", ({ secure, hostname, port }) => {
+  const protocol:string = secure ? "https://" : "http://";
+  const url= `${protocol}${hostname ?? "localhost"}:${port}`;
+  console.log(`Listening on: ${url}`);
+});
+await app.listen({ port });
